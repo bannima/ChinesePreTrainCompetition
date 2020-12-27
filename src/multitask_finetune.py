@@ -53,12 +53,6 @@ class MultiTaskFineTune():
 
         self.model_path = os.path.join(os.getcwd(), MODELS[model_name]['path'])
 
-        #demo experiment
-        '''self.roberta = RobertaModel.from_pretrained(self.model_path)
-        text = "Replace me by any text you'd like."
-        encoded_input = self.tokenizer(text, return_tensors='pt')
-        output = self.roberta(**encoded_input)'''
-
         corpus = Corpus(self.tokenizer,HYPERS['BATCH_SIZE'],self.seed_val)
 
         self.ocemo_train_loader, self.ocnli_train_loader, self.tnews_train_loader = corpus.get_train_dataloader()

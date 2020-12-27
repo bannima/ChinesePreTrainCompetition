@@ -36,7 +36,7 @@ class BertBaseLinear(nn.Module):
             raise ValueError("Unknown task type for "+task_type)
 
 class RobertaLargeLinear(nn.Module):
-    '''roberta-large'''
+    '''roberta-large with linear output'''
     def __init__(self):
         super(RobertaLargeLinear, self).__init__()
         self.model_path = os.path.join(os.getcwd(),MODELS[self.__class__.__name__]['path'])
@@ -60,7 +60,7 @@ class RobertaLargeLinear(nn.Module):
 
 
 class RobertaBaseLinear(nn.Module):
-    '''roberta-base'''
+    '''roberta-base with linear output'''
     def __init__(self):
         super(RobertaBaseLinear,self).__init__()
         self.model_path = os.path.join(os.getcwd(), MODELS[self.__class__.__name__]['path'])
@@ -84,7 +84,7 @@ class RobertaBaseLinear(nn.Module):
 
 
 class ChineseRobertaLinear(nn.Module):
-    '''hfl/chinese-roberta-wwm-ext'''
+    '''hfl/chinese-roberta-wwm-ext with linear output'''
     def __init__(self):
         super(ChineseRobertaLinear,self).__init__()
         self.model_path = os.path.join(os.getcwd(), MODELS[self.__class__.__name__]['path'])
