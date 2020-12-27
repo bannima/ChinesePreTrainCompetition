@@ -34,8 +34,11 @@ def stats_visualize(stats, hypers):
     ax1.set_ylabel('Three tasks F1 Score', fontsize='large')
 
     ax2 = ax1.twinx()
-    ax2.plot(x_axis, stats['Train Loss'].map(lambda val:val/2280), color=global_colors[6], marker='*', lw=1.5, linestyle='--')
-    ax2.plot(x_axis, stats['Valid Loss'].map(lambda val:val/24), color=global_colors[5], marker='*', lw=1.5, linestyle='--')
+    #ax2.plot(x_axis, stats['Train Loss'].map(lambda val:val/2280), color=global_colors[6], marker='*', lw=1.5, linestyle='--')
+    #ax2.plot(x_axis, stats['Valid Loss'].map(lambda val:val/24), color=global_colors[5], marker='*', lw=1.5, linestyle='--')
+    ax2.plot(x_axis, stats['Avg Train Loss'], color=global_colors[6], marker='*', lw=1.5, linestyle='--')
+    ax2.plot(x_axis, stats['Avg Valid Loss'], color=global_colors[5], marker='*', lw=1.5, linestyle='--')
+
     ax2.legend(['Avg Train Loss','Avg Valid Loss'], loc='upper right', fontsize=10)
     ax2.set_ylabel('Avg Train & Valid Loss', fontsize='large')
 
