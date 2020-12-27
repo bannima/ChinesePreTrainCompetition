@@ -17,21 +17,21 @@ class BertBaseLinear(nn.Module):
     def __init__(self):
         super(BertBaseLinear, self).__init__()
         self.model_path = os.path.join(os.getcwd(),MODELS[self.__class__.__name__]['path'])
-
         self.bert_base = BertModel.from_pretrained(self.model_path)
-
         self.ocemo_linear = nn.Linear(768,7)
         self.ocnli_linear = nn.Linear(768,3)
         self.tnews_linear = nn.Linear(768,15)
 
     def forward(self, task_type, *inputs):
-        pooled_outputs = self.bert_base(*inputs)
+        #pooled_outputs = self.bert_base(*inputs)
+        #class embedding outputs
+        cls_embs = self.bert_base(*inputs)[0][:,0,:].squeeze(1)
         if task_type=='OCEMOTION':
-            return self.ocemo_linear(pooled_outputs[1])
+            return self.ocemo_linear(cls_embs)
         elif task_type=='OCNLI':
-            return self.ocnli_linear(pooled_outputs[1])
+            return self.ocnli_linear(cls_embs)
         elif task_type=='TNEWS':
-            return self.tnews_linear(pooled_outputs[1])
+            return self.tnews_linear(cls_embs)
         else:
             raise ValueError("Unknown task type for "+task_type)
 
@@ -40,48 +40,42 @@ class RobertaLargeLinear(nn.Module):
     def __init__(self):
         super(RobertaLargeLinear, self).__init__()
         self.model_path = os.path.join(os.getcwd(),MODELS[self.__class__.__name__]['path'])
-
         self.roberta_large = RobertaModel.from_pretrained(self.model_path)
-
         self.ocemo_linear = nn.Linear(1024, 7)
         self.ocnli_linear = nn.Linear(1024, 3)
         self.tnews_linear = nn.Linear(1024, 15)
 
     def forward(self, task_type, *inputs):
-        pooled_outputs = self.roberta_large(*inputs)
+        cls_embs = self.roberta_large(*inputs)[0][:,0,:].squeeze(1)
         if task_type == 'OCEMOTION':
-            return self.ocemo_linear(pooled_outputs[1])
+            return self.ocemo_linear(cls_embs)
         elif task_type == 'OCNLI':
-            return self.ocnli_linear(pooled_outputs[1])
+            return self.ocnli_linear(cls_embs)
         elif task_type == 'TNEWS':
-            return self.tnews_linear(pooled_outputs[1])
+            return self.tnews_linear(cls_embs)
         else:
             raise ValueError("Unknown task type for " + task_type)
-
 
 class RobertaBaseLinear(nn.Module):
     '''roberta-base with linear output'''
     def __init__(self):
         super(RobertaBaseLinear,self).__init__()
         self.model_path = os.path.join(os.getcwd(), MODELS[self.__class__.__name__]['path'])
-
         self.roberta_base = RobertaModel.from_pretrained(self.model_path)
-
         self.ocemo_linear = nn.Linear(768, 7)
         self.ocnli_linear = nn.Linear(768, 3)
         self.tnews_linear = nn.Linear(768, 15)
 
     def forward(self,task_type,*inputs):
-        pooled_outputs = self.roberta_base(*inputs)
+        cls_embs = self.roberta_base(*inputs)[0][:,0,:].squeeze(1)
         if task_type == 'OCEMOTION':
-            return self.ocemo_linear(pooled_outputs[1])
+            return self.ocemo_linear(cls_embs)
         elif task_type == 'OCNLI':
-            return self.ocnli_linear(pooled_outputs[1])
+            return self.ocnli_linear(cls_embs)
         elif task_type == 'TNEWS':
-            return self.tnews_linear(pooled_outputs[1])
+            return self.tnews_linear(cls_embs)
         else:
             raise ValueError("Unknown task type for " + task_type)
-
 
 class ChineseRobertaLinear(nn.Module):
     '''hfl/chinese-roberta-wwm-ext with linear output'''
@@ -95,13 +89,13 @@ class ChineseRobertaLinear(nn.Module):
         self.tnews_linear = nn.Linear(768, 15)
 
     def forward(self,task_type,*inputs):
-        pooled_outputs = self.chinese_roberta(*inputs)
+        cls_embs = self.chinese_roberta(*inputs)[0][:,0,:].squeeze(1)
         if task_type == 'OCEMOTION':
-            return self.ocemo_linear(pooled_outputs[1])
+            return self.ocemo_linear(cls_embs)
         elif task_type == 'OCNLI':
-            return self.ocnli_linear(pooled_outputs[1])
+            return self.ocnli_linear(cls_embs)
         elif task_type == 'TNEWS':
-            return self.tnews_linear(pooled_outputs[1])
+            return self.tnews_linear(cls_embs)
         else:
             raise ValueError("Unknown task type for " + task_type)
 
