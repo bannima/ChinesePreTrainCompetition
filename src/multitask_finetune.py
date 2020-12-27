@@ -45,10 +45,7 @@ class MultiTaskFineTune():
         self._set_random_seed()
         HYPERS['MODEL_NAME'] = model_name
 
-        #model_path = os.path.join(os.getcwd(),'pretrain_model/bert-base-chinese/')
-
         # 加载model
-        # self.model = BERTLinearModel(model_path)
         self.model,self.tokenizer = self._load_model_tokenizer(model_name)
 
         self.model_path = os.path.join(os.getcwd(), MODELS[model_name]['path'])
@@ -57,11 +54,7 @@ class MultiTaskFineTune():
 
         self.ocemo_train_loader, self.ocnli_train_loader, self.tnews_train_loader = corpus.get_train_dataloader()
 
-        print("## train times with batch size 64 is {}".format(len(self.ocemo_train_loader)))
-
         self.valid_loaders = corpus.get_valid_dataloader()
-
-        print("## valid times with batch size 64 is {}".format(len(self.valid_loaders[0])))
 
         self.test_loaders = corpus.get_test_dataloader()
 
@@ -346,10 +339,10 @@ if __name__ =='__main__':
         'EPOCHS': 5,
     }
     #加载数据和模型
-    #app = MultiTaskFineTune(model_name='BertBaseLinear')
+    app = MultiTaskFineTune(model_name='BertBaseLinear')
     #app = MultiTaskFineTune(model_name='RobertaLargeLinear')
     #app = MultiTaskFineTune(model_name='RobertaBaseLinear')
-    app = MultiTaskFineTune(model_name='ChineseRobertaLinear')
+    #app = MultiTaskFineTune(model_name='ChineseRobertaLinear')
     #按照EPOCH数进行训练
     app.run_epoch()
     #app.test()
