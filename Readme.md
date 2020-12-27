@@ -17,7 +17,7 @@
 
 ### Run the following command to train:
 
-`python3 multistask_finetune.py`  or
+`python3 multitask_finetune.py`  or
 
 `nohup python3 -u multitask_finetune.py > output.log 2>&1 &`
 
