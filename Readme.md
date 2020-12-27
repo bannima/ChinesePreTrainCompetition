@@ -1,7 +1,7 @@
-###[NLP中文预训练模型泛化能力挑战赛](https://tianchi.aliyun.com/competition/entrance/531841/introduction)
+## [NLP中文预训练模型泛化能力挑战赛](https://tianchi.aliyun.com/competition/entrance/531841/introduction)
 (since 2020/11/20)
 
-#### Requirements
+### Requirements
 
 - pytorch > 1.0.0
 - transformers
@@ -10,18 +10,18 @@
 - tqdm
 - pandas
 
-#### Model Archietcture
+### Model Archietcture
 
 <img src="./model_architecture.jpg" width="80%" height="50%">
 
 
-#### Run the following command to train:
+### Run the following command to train:
 
 `python3 multistask_finetune.py`  or
 
 `nohup python3 -u multitask_finetune.py > output.log 2>&1 &`
 
-####  Models
+###  Models
 
 - Bert+Linear
 
@@ -31,7 +31,7 @@
 
 - chinese-roberta-wwm-ext+Linear
 
-#### Experiment Results
+### Experiment Results
 
 | Model | Batch Size | Learning Rate | Epochs | Valid F1 | Test F1 | Date | Statistics |
 | :----:| :----: | :----: | :----: | :----: | :----: |  :----: |  :----: |
@@ -41,5 +41,5 @@
 
 
 
-#### References
+### References
 - [关于中文预训练模型泛化能力挑战赛的调研](https://tianchi.aliyun.com/forum/postDetail?spm=5176.12586969.1002.12.25a02494RQLgEY&postId=145917)
