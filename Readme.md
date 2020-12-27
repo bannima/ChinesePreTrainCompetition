@@ -23,7 +23,7 @@
 
 ###  Models
 
-- Bert+Linear
+- bert-base-chinese+Linear
 
 - roberta-large+Linear
 
@@ -42,4 +42,5 @@
 
 
 ### References
+
 - [关于中文预训练模型泛化能力挑战赛的调研](https://tianchi.aliyun.com/forum/postDetail?spm=5176.12586969.1002.12.25a02494RQLgEY&postId=145917)
