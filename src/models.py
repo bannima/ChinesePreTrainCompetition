@@ -10,7 +10,10 @@ Version: 0.1
 from transformers import RobertaTokenizer,RobertaModel
 from transformers import BertModel,BertTokenizer
 import torch.nn as nn
+import torch.nn.functional as F
+import torch
 import os
+
 
 class BertBaseLinear(nn.Module):
     '''Simple BERT with three Linear output'''
@@ -99,12 +102,60 @@ class ChineseRobertaLinear(nn.Module):
         else:
             raise ValueError("Unknown task type for " + task_type)
 
+class BertBaseAttention(nn.Module):
+    '''
+        bert-base-chinese with self-attention output
+        The implementated self-attention mechamism is same as
+       'A Structured Self-attentive Sentence Embedding' in ICLR2017
+       without penalization item.
+    '''
+    def __init__(self):
+        super(BertBaseAttention,self).__init__()
+        self.model_path = os.path.join(os.getcwd(), MODELS[self.__class__.__name__]['path'])
+        self.bert_base = BertModel.from_pretrained(self.model_path)
+
+        # We will use da = 350, r = 30 & penalization_coeff = 1 as per given in the self-attention original ICLR paper
+        da = 350
+        r = 30
+        self.W_s1 = nn.Linear(768, da)
+        self.W_s2 = nn.Linear(da, r)
+        self.fc = nn.Linear(r*768, 2000)
+
+        self.ocemo_linear = nn.Linear(2000, 7)
+        self.ocnli_linear = nn.Linear(2000, 3)
+        self.tnews_linear = nn.Linear(2000, 15)
+
+    def forward(self,task_type,*inputs):
+        outputs = self.bert_base(*inputs)[0]
+        hidden_matrix = self.self_att(outputs)
+        fc_output = self.fc(hidden_matrix.view(-1,hidden_matrix.size()[1]*hidden_matrix.size()[2]))
+        if task_type == 'OCEMOTION':
+            return self.ocemo_linear(fc_output)
+        elif task_type == 'OCNLI':
+            return self.ocnli_linear(fc_output)
+        elif task_type == 'TNEWS':
+            return self.tnews_linear(fc_output)
+        else:
+            raise ValueError("Unknown task type for " + task_type)
+
+    def self_att(self,embs):
+        ''''''
+        attention_matrix = self.W_s2(torch.tanh(self.W_s1(embs)))
+        attention_matrix = F.softmax(attention_matrix.permute(0, 2, 1), dim=2)
+        hidden_matrix = torch.bmm(attention_matrix,embs)
+        return hidden_matrix
+
 #所有模型
 MODELS =  {
     'BertBaseLinear':{
         'class':BertBaseLinear,
         'tokenizer':BertTokenizer,
         'path':'pretrain_model/bert-base-chinese/',
+    },
+    'BertBaseAttention': {
+        'class': BertBaseAttention,
+        'tokenizer': BertTokenizer,
+        'path': 'pretrain_model/bert-base-chinese/',
     },
     'RobertaLargeLinear':{
         'class':RobertaLargeLinear,
