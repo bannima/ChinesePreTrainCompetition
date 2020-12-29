@@ -1,13 +1,12 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 """
 FileName: multitask_finetune.py
-Description: 
+Description:
 Author: Barry Chow
 Date: 2020/12/9 6:13 PM
 Version: 0.1
 """
-
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 import torch
@@ -26,8 +25,10 @@ import os
 from itertools import zip_longest
 from models import MODELS
 from stats_visualizer import stats_visualize
+from loss_strategy import LOSS_STRATEGY
 
 TASK_TYPES = ['OCEMOTION','OCNLI','TNEWS']
+
 
 def format_time(elapsed):
     elapsed_rounded = int(round((elapsed)))
@@ -36,7 +37,7 @@ def format_time(elapsed):
 
 class MultiTaskFineTune():
 
-    def __init__(self, model_name='BertBaseLinear', retrain_model_path=None):
+    def __init__(self, model_name='BertBaseLinear', retrain_model_path=None, loss_strategy='Average'):
         super(MultiTaskFineTune).__init__()
 
         #是否重新开始训练，若从已训练好的模型继续训练，则输入模型路径，否则为None
@@ -44,27 +45,34 @@ class MultiTaskFineTune():
         self._set_device()
         self._set_random_seed()
         HYPERS['MODEL_NAME'] = model_name
+        HYPERS['LOSS_OPTIMIZER'] = loss_strategy
 
         # 加载model
         self.model,self.tokenizer = self._load_model_tokenizer(model_name)
+
+        # move model to GPU
+        if torch.cuda.is_available():
+            self.model.cuda()
+            if self.n_gpu > 1:
+                self.model = torch.nn.DataParallel(self.model)
+
+        # loss function
+        self.criterion = nn.CrossEntropyLoss()
+
+        # loss strategy optimizer
+        self.loss_strategy = self._load_loss_strategy(loss_strategy,self.criterion)
 
         self.model_path = os.path.join(os.getcwd(), MODELS[model_name]['path'])
 
         corpus = Corpus(self.tokenizer,HYPERS['BATCH_SIZE'],self.seed_val)
 
-        self.ocemo_train_loader, self.ocnli_train_loader, self.tnews_train_loader = corpus.get_train_dataloader()
+        self.ocemo_train_loader, self.ocnli_train_loader, self.tnews_train_loader = corpus.train_dataloaders()
 
-        self.valid_loaders = corpus.get_valid_dataloader()
+        self.valid_loaders = corpus.valid_dataloaders()
 
-        self.test_loaders = corpus.get_test_dataloader()
+        self.test_loaders = corpus.test_dataloaders()
 
         self.all_idx2label = corpus.get_idx2label()
-
-        # move to GPU
-        if torch.cuda.is_available():
-            self.model.cuda()
-            if self.n_gpu>1:
-                self.model = torch.nn.DataParallel(self.model)
 
         # optimizer
         self.optimizer = AdamW(
@@ -73,8 +81,11 @@ class MultiTaskFineTune():
             eps = 1e-8
         )
 
-        # loss function
-        self.criterion = nn.CrossEntropyLoss()
+    def _load_loss_strategy(self, loss_strategy,criterion):
+        assert loss_strategy in LOSS_STRATEGY
+        print("### Loss Optimization Strategy is {} ###".format(loss_strategy))
+        return LOSS_STRATEGY[loss_strategy](criterion)
+
 
     def _load_model_tokenizer(self,model_name):
         model_path = os.path.join(os.getcwd(), MODELS[model_name]['path'])
@@ -197,6 +208,12 @@ class MultiTaskFineTune():
     def _train(self, epoch):
         total_train_loss = 0
         for batches in zip_longest(tqdm(self.ocemo_train_loader,desc="Epoch {}".format(epoch),unit='batch'),self.ocnli_train_loader,self.tnews_train_loader):
+
+            batch_outputs_labels = {}
+
+            # clear any previously calculated gradients before performing a backward pass.
+            self.model.zero_grad()
+
             for batch,task_type in zip(batches,TASK_TYPES):
                 #zip longest对于不同长度的迭代器，会默认补None
                 if batch is None: continue
@@ -209,24 +226,25 @@ class MultiTaskFineTune():
 
                 labels = batch[-1].to(self.device)
 
-                # clear any previously calculated gradients before performing a backward pass.
-                self.model.zero_grad()
-
                 #outputs = self.model(task_type,input_ids,token_type_ids,attention_masks)
                 outputs = self.model(task_type,*inputs)
 
-                loss = self.criterion(outputs,labels)
+                #loss = self.criterion(outputs,labels)
 
-                # perform a backward pass to calculate the gradients
-                loss.backward()
+                batch_outputs_labels[task_type] = (outputs,labels)
 
-                total_train_loss  += loss.item()
+            batch_loss = self.loss_strategy(**batch_outputs_labels)
 
-                # normalization of the gradients to 1.0 to avoid exploding gradients
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            # perform a backward pass to calculate the gradients
+            batch_loss.backward()
 
-                # update parameters and take a step using the computed gradient.
-                self.optimizer.step()
+            total_train_loss  += batch_loss.item()
+
+            # normalization of the gradients to 1.0 to avoid exploding gradients
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+
+            # update parameters and take a step using the computed gradient.
+            self.optimizer.step()
 
             # update the learning rate
             self.scheduler.step()
@@ -300,7 +318,8 @@ class MultiTaskFineTune():
             self._save_predictions(epoch, task_type, predictions, idx2label)
 
     def _save_predictions(self, epoch, task_type, predicts, idx2label):
-        filepath = './finetuned_results/' +'Model{}_BATCH{}_Epoch{}_LR{}/'.format(HYPERS['MODEL_NAME'],HYPERS['BATCH_SIZE'],epoch,HYPERS['LEARNING_RATE'])
+        filepath = './finetuned_results/' +'Model{}_BATCH{}_Epoch{}_LR{}_LS{}/'.format(HYPERS['MODEL_NAME'],\
+                                            HYPERS['BATCH_SIZE'],epoch,HYPERS['LEARNING_RATE'],HYPERS['LOSS_OPTIMIZER'])
         if not os.path.exists(filepath):
             os.mkdir(filepath)
         filename = task_type.lower() + '_predict.json'
@@ -315,14 +334,14 @@ class MultiTaskFineTune():
     def _save_stats(self,stats):
         '''保存训练过程数据'''
         df = pd.DataFrame(stats)
-        filename = 'Stats_{}_BATCH{}_Epoch{}_LR{}.csv'.format(HYPERS['MODEL_NAME'],HYPERS['BATCH_SIZE'],\
-                HYPERS['EPOCHS'],HYPERS['LEARNING_RATE'])
+        filename = 'Stats_{}_BATCH{}_Epoch{}_LR{}_LS{}.csv'.format(HYPERS['MODEL_NAME'],HYPERS['BATCH_SIZE'],\
+                HYPERS['EPOCHS'],HYPERS['LEARNING_RATE'],HYPERS['LOSS_OPTIMIZER'])
         df.to_csv('./finetuned_results/'+filename, sep=',', encoding='utf-8', index=False)
 
     def save_model(self):
         #保存训练好的模型
-        model_name = 'Model{}_BATCH{}_Epoch{}_LR{}_TIME{}.pkl'.format(HYPERS['MODEL_NAME'],HYPERS['BATCH_SIZE'],\
-                HYPERS['EPOCHS'],HYPERS['LEARNING_RATE'],time.strftime("%Y%m%d_%H%M",time.localtime()))
+        model_name = 'Model{}_BATCH{}_Epoch{}_LR{}_LS{}_TIME{}.pkl'.format(HYPERS['MODEL_NAME'],HYPERS['BATCH_SIZE'],\
+                HYPERS['EPOCHS'],HYPERS['LEARNING_RATE'],HYPERS['LOSS_OPTIMIZER'],time.strftime("%Y%m%d_%H%M",time.localtime()))
         torch.save(self.model, './finetuned_model/'+model_name)
         print("Finetuned model saved! ...")
 
@@ -334,22 +353,21 @@ class MultiTaskFineTune():
 if __name__ =='__main__':
     # global hpyer parameters
     HYPERS = {
-        'BATCH_SIZE': 64,
+        'BATCH_SIZE': 32,
         'LEARNING_RATE': 5e-5,
         'EPOCHS': 5,
     }
     #加载数据和模型
-    app = MultiTaskFineTune(model_name='BertBaseLinear')
+    #app = MultiTaskFineTune(model_name='BertBaseLinear')
+    #app = MultiTaskFineTune(model_name='BertBaseAttention')
     #app = MultiTaskFineTune(model_name='RobertaLargeLinear')
     #app = MultiTaskFineTune(model_name='RobertaBaseLinear')
-    #app = MultiTaskFineTune(model_name='ChineseRobertaLinear')
+    #app = MultiTaskFineTune(model_name='ChineseRobertaLinear',loss_strategy='Average')
+    app = MultiTaskFineTune(model_name='ChineseRobertaLinear',loss_strategy='Weighted')
+
     #按照EPOCH数进行训练
     app.run_epoch()
     #app.test()
     #保存训练好的模型
     app.save_model()
-
-
-
-
 

@@ -34,14 +34,24 @@
 - bert-base-chinese + Self Attention : **BertBaseAttention**
 
 
+### Loss Strategy
+
+- mean average loss: **Average**
+
+- weighted loss: **Weighted**
+
+- dynamic task prioritization: **Dtp**
+
+
 ### Experiment Results
 
-| Model | Batch Size | Learning Rate | Finetuned Model Output | Epochs | Valid F1 | Test F1 | Date | Statistics |
-| :----:| :----: | :----: | :----: |:----: | :----: | :----: |  :----: |  :----: |
-| BertBaseLinear | 64 | 5e-5 | pooled output | 7 | 0.5708366690203711 | 0.5834| 2020/12/26 09:30|Stats_BertBaseLinear_BATCH64_Epoch10_LR5e-05.csv |
-| BertBaseLinear | 64 | 5e-5 | pooled output |10 | 0.5669902108325462 | 0.5788| 2020/12/26 11:15 |Stats_BertBaseLinear_BATCH64_Epoch10_LR5e-05.csv |
-| ChineseRoberteLinear | 64 | 5e-5 | pooled output | 4 | 0.609208530047737 | 0.6041| 2020/12/27 8:30 |Stats_ChineseRobertaLinear_BATCH64_Epoch5_LR5e-05.csv |
-| BertBaseAttention | 32 | 5e-5 | cls embedding |3 | 0.5805297492177061 | 0.5774 | 2020/12/28 11:10 |Stats_BertBaseAttention_BATCH32_Epoch5_LR5e-05.csv |
+| Model | Batch Size | Learning Rate | Loss Strategy | Finetuned Model Output | Epochs | Valid F1 | Test F1 | Date | Statistics |
+| :----:| :----: | :----: | :----: |:----: |:----: | :----: | :----: |  :----: |  :----: |
+| BertBaseLinear | 64 | 5e-5 |Average| pooled output | 7 | 0.5708366690203711 | 0.5834| 2020/12/26 09:30|Stats_BertBaseLinear_BATCH64_Epoch10_LR5e-05.csv |
+| BertBaseLinear | 64 | 5e-5 |Average| pooled output |10 | 0.5669902108325462 | 0.5788| 2020/12/26 11:15 |Stats_BertBaseLinear_BATCH64_Epoch10_LR5e-05.csv |
+| ChineseRoberteLinear | 64 | 5e-5 | Average |pooled output | 4 | 0.609208530047737 | 0.6041| 2020/12/27 8:30 |Stats_ChineseRobertaLinear_BATCH64_Epoch5_LR5e-05.csv |
+| BertBaseAttention | 32 | 5e-5 | Average | cls embedding |3 | 0.5805297492177061 | 0.5774 | 2020/12/28 11:10 |Stats_BertBaseAttention_BATCH32_Epoch5_LR5e-05.csv |
+| ChineseRobertaLinear | 32 | 5e-5 | Average | cls embedding |3 | 0.6146600332186392 | 0.6050 | 2020/12/29 12:10 |Stats_ChineseRobertaLinear_BATCH32_Epoch5_LR5e-05_LSAverage.csv |
 
 
 

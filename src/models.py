@@ -16,7 +16,7 @@ import os
 
 
 class BertBaseLinear(nn.Module):
-    '''Simple BERT with three Linear output'''
+    '''bert-base-chinese with Linear output'''
     def __init__(self):
         super(BertBaseLinear, self).__init__()
         self.model_path = os.path.join(os.getcwd(),MODELS[self.__class__.__name__]['path'])
@@ -26,7 +26,7 @@ class BertBaseLinear(nn.Module):
         self.tnews_linear = nn.Linear(768,15)
 
     def forward(self, task_type, *inputs):
-        #pooled_outputs = self.bert_base(*inputs)
+        #pooled_output = self.bert_base(*inputs)[1]
         #class embedding outputs
         cls_embs = self.bert_base(*inputs)[0][:,0,:].squeeze(1)
         if task_type=='OCEMOTION':

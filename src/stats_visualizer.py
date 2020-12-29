@@ -51,12 +51,14 @@ def stats_visualize(stats, hypers):
 
 if __name__ == '__main__':
     hypers = {
-        'BATCH_SIZE': 64,
+        'BATCH_SIZE': 32,
         'LEARNING_RATE': 5e-5,
-        'EPOCHS': 10,
-        'MODEL_NAME': 'BertBaseLinear'
+        'EPOCHS': 5,
+        'LOSS_OPTIMIZER':'Average',
+        'MODEL_NAME': 'ChineseRobertaLinear'
     }
-    file_name = 'Stats_{}_BATCH{}_Epoch{}_LR{}.csv'.format(hypers['MODEL_NAME'], hypers['BATCH_SIZE'], hypers['EPOCHS'], hypers['LEARNING_RATE'])
+    file_name = 'Stats_{}_BATCH{}_Epoch{}_LR{}_LS{}.csv'.format(hypers['MODEL_NAME'],\
+            hypers['BATCH_SIZE'], hypers['EPOCHS'], hypers['LEARNING_RATE'],hypers['LOSS_OPTIMIZER'])
     file_path = os.path.join(os.getcwd(), 'finetuned_results/' + file_name)
     stats = pd.read_csv(file_path, sep=',')
 

@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import RandomSampler,SequentialSampler
 from tqdm import tqdm
 import csv
+import numpy as np
 
 #将数据转换为bert的输入
 def convert_to_bert_dataset(data, labels, tokenizer, max_length):
@@ -109,16 +110,19 @@ class Corpus():
         print("## min batch size:  OCEMOTION is {}, OCNLI is {}, TNEWS is {} ##".format(ocemo_batch_size,ocnli_batch_size,tnews_batch_size))
 
         #预处理数据集
-        #计算max length, 计算耗时，直接保存结果512
-        self.max_length=512
-        print(" max token length of FineTune model : ", self.max_length)
-
+        #计算max length, 计算耗时，直接保存结果311
+        self.max_length=320
         '''
+        print("### max token length of FineTune model : ", self.max_length)
+
+
         ocemo_maxlen = self.calc_max_length(OCEMO_train)
         ocnli_maxlen = self.calc_max_length(OCNLI_train)
         tnews_maxlen = self.calc_max_length(TNEWS_train)
 
         max_len = max((ocemo_maxlen,ocnli_maxlen,tnews_maxlen))
+        print("!!!### max token length of FineTune model : ", max_len)
+
         # 将输入统一为相同的最大长度, BERT最多接受长度为512的输入
         self.max_length = min(512,pow(2, int(np.log2(max_len) + 1)))
         '''
@@ -141,7 +145,7 @@ class Corpus():
             self.tnews_idx2label = self.loader_generator(self.test_scale['TNEWS'], TNEWS_train[['document', 'class']], \
                                                          TNEWS_test[['document']], tnews_batch_size)
 
-        print('## All Train and Test Data loaded ! ##')
+        print('## All Train and Test Data loaded ! \n##')
 
     def loader_generator(self, test_size, train_data, test_data, mini_batch_size):
         '''生成训练、验证、测试集合的dataloader，注意训练集batch size根据三个任务不同长度计算而来'''
@@ -189,23 +193,20 @@ class Corpus():
         )
         return train_dataloader,valid_dataloader,test_dataloader,idx2label
 
-
     def calc_max_length(self,data):
         # 计算输入最大长度和labels set,
-        labels = set()
         max_len = 0
         for _, row in data.iterrows():
             max_len = max(max_len, len(self.tokenizer(row['document'])['input_ids']))
-            labels.add(row['class'])
-        return max_len,labels
+        return max_len
 
-    def get_train_dataloader(self):
+    def train_dataloaders(self):
         return self.ocemo_train_loader,self.ocnli_train_loader,self.tnews_train_loader
 
-    def get_valid_dataloader(self):
+    def valid_dataloaders(self):
         return self.ocemo_valid_loader,self.ocnli_valid_loader,self.tnews_valid_loader
 
-    def get_test_dataloader(self):
+    def test_dataloaders(self):
         return self.ocemo_test_loader,self.ocnli_test_loader,self.tnews_test_loader
 
     def get_idx2label(self):
