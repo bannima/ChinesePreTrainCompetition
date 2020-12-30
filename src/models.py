@@ -102,6 +102,29 @@ class ChineseRobertaLinear(nn.Module):
         else:
             raise ValueError("Unknown task type for " + task_type)
 
+class ChineseRobertaLargeLinear(nn.Module):
+    '''hfl/chinese-roberta-wwm-ext-large with linear output'''
+    def __init__(self):
+        super(ChineseRobertaLargeLinear,self).__init__()
+        self.model_path = os.path.join(os.getcwd(), MODELS[self.__class__.__name__]['path'])
+        #chinese-roberta-wwm-ext-large使用BertModel BertTokenizer
+        self.chinese_roberta_large = BertModel.from_pretrained(self.model_path)
+        self.ocemo_linear = nn.Linear(1024, 7)
+        self.ocnli_linear = nn.Linear(1024, 3)
+        self.tnews_linear = nn.Linear(1024, 15)
+
+    def forward(self,task_type,*inputs):
+        cls_embs = self.chinese_roberta_large(*inputs)[0][:, 0, :].squeeze(1)
+        if task_type == 'OCEMOTION':
+            return self.ocemo_linear(cls_embs)
+        elif task_type == 'OCNLI':
+            return self.ocnli_linear(cls_embs)
+        elif task_type == 'TNEWS':
+            return self.tnews_linear(cls_embs)
+        else:
+            raise ValueError("Unknown task type for " + task_type)
+
+
 class BertBaseAttention(nn.Module):
     '''
         bert-base-chinese with self-attention output
@@ -171,6 +194,11 @@ MODELS =  {
         'class':ChineseRobertaLinear,
         'tokenizer':BertTokenizer,
         'path':'pretrain_model/chinese-roberta-wwm-ext'
+    },
+    'ChineseRobertaLargeLinear':{
+        'class':ChineseRobertaLargeLinear,
+        'tokenizer':BertTokenizer,
+        'path':'pretrain_model/chinese-roberta-wwm-ext-large'
     }
 }
 
