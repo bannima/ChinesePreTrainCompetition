@@ -31,8 +31,10 @@
 
 - chinese-roberta-wwm-ext + Linear : **ChineseRobertaLinear**
 
-- bert-base-chinese + Self Attention : **BertBaseAttention**
+- chinese-roberta-wwm-ext-large + Linear : **ChineseRobertaLargeLinear**
 
+- bert-base-chinese + Self Attention : **BertBaseAttention**
+ 
 
 ### Loss Strategy
 
@@ -52,6 +54,7 @@
 | ChineseRoberteLinear | 64 | 5e-5 | Average |pooled output | 4 | 0.609208530047737 | 0.6041| 2020/12/27 8:30 |Stats_ChineseRobertaLinear_BATCH64_Epoch5_LR5e-05.csv |
 | BertBaseAttention | 32 | 5e-5 | Average | cls embedding |3 | 0.5805297492177061 | 0.5774 | 2020/12/28 11:10 |Stats_BertBaseAttention_BATCH32_Epoch5_LR5e-05.csv |
 | ChineseRobertaLinear | 32 | 5e-5 | Average | cls embedding |3 | 0.6146600332186392 | 0.6050 | 2020/12/29 12:10 |Stats_ChineseRobertaLinear_BATCH32_Epoch5_LR5e-05_LSAverage.csv |
+| ChineseRobertaLinear | 32 | 5e-5 | Weighted | cls embedding |3 | 0.6026366872901446 | 0.6133 | 2020/12/30 21:10 |Stats_ChineseRobertaLinear_BATCH32_Epoch5_LR5e-05_LSWeighted.csv |
 
 
 
